@@ -1,0 +1,45 @@
+
+name: Build Shadow Strike APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-apk.yml'
+      - 'ShadowStrikeAndroidProject.zip'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get project files
+        uses: actions/checkout@v4
+
+      - name: Extract project
+        run: |
+          unzip -o ShadowStrikeAndroidProject.zip -d project
+          find project -maxdepth 3 -type f
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build APK
+        run: |
+          cd project
+          if [ -f gradlew ]; then
+            chmod +x gradlew
+            ./gradlew assembleDebug
+          else
+            echo "Gradle wrapper not found. Project needs Android build configuration."
+            exit 1
+          fi
+
+      - name: Save APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shadow-Strike-APK
+          path: project/**/build/outputs/apk/debug/*.apk
+          
